@@ -118,6 +118,34 @@ def __plot_graphs(graph_minus_side, graph_plus_side, y_min, y_max,
         c.Print(full_figure_name)
 
 
+def __build_output_file_name(
+        sub_system,
+        layer,
+        normalize_to_number_of_rocs,
+        normalize_to_volume,
+        target_temperature,
+        fill,
+        fill2=None,
+    ):
+
+    if fill2 is None:
+        output_name = "leakage_current_vs_azimuthal_angle_fill_%d" % (fill)
+    else:
+        output_name = "leakage_current_difference_vs_azimuthal_angle_fills_%d_%d" \
+                      % (fill, fill2)
+
+    output_name += "_%s" % sub_system
+    output_name += "_layer_%s" % layer
+    if normalize_to_number_of_rocs:
+        output_name += "_perRoc"
+    if normalize_to_volume:
+        output_name += "_volumeNormalization"
+    if target_temperature:
+        output_name += "_correctedTo%dK" % target_temperature
+
+    return output_name
+
+
 def __produce_csv_file(data_per_readout_group, column_names, file_name):
     dataframes = []
     index_label = "readout_group"
@@ -186,6 +214,16 @@ def __plot_leakage_current_vs_phi(
         **labels_args
     )
 
+    sub_system_text = "BPix" if sub_system == "Barrel" else "FPix"
+    output_name =  __build_output_file_name(
+        sub_system_text,
+        layer,
+        normalize_to_number_of_rocs,
+        normalize_to_volume,
+        target_temperature,
+        fill,
+    )
+
     if produce_csv_files:
         leakage_current_per_readout_group = {
             **leakage_current_per_sector_minus_side,
@@ -197,21 +235,14 @@ def __plot_leakage_current_vs_phi(
         }
         data = (leakage_current_per_readout_group, temperatures_per_readout_group)
         column_names = (labels_args["y_label"], "sensor_temperature [K]")
-        file_name = "%s/leakage_current_and_temperature_per_sector_fill_%s.csv" \
-                    % (csv_directory, fill)
+        file_name = "%s/%s_data.csv" % (csv_directory, output_name)
         __produce_csv_file(data, column_names, file_name)
 
-    sub_system_text = "BPix" if sub_system == "Barrel" else "FPix"
-    figure_name = "leakage_current_vs_azimuthal_angle_fill_%d" % (fill)
-    if normalize_to_volume:
-        figure_name += "_volumeNormalization"
-    if target_temperature:
-        figure_name += "_correctedTo%dK" % target_temperature
     text_top_left_corner = "Fill %d, %s Layer %s" % (fill, sub_system_text, layer)
     text_above_top_right_corner = "(%s) %s TeV - %.1f fb^{-1}" % ("2022", "13.6", integrated_lumi)
     __plot_graphs(graph_minus_side, graph_plus_side, y_min, y_max,
                   text_top_left_corner, text_above_top_right_corner,
-                  output_directory, figure_name, extensions)
+                  output_directory, output_name, extensions)
 
 
 def __plot_leakage_current_difference_vs_phi(
@@ -288,6 +319,17 @@ def __plot_leakage_current_difference_vs_phi(
         marker_size=1,
         **labels_args,
     )
+
+    sub_system_text = "BPix" if sub_system == "Barrel" else "FPix"
+    output_name =  __build_output_file_name(
+        sub_system_text,
+        layer,
+        normalize_to_number_of_rocs,
+        normalize_to_volume,
+        target_temperature,
+        first_fill,
+        last_fill,
+    )
     
     if produce_csv_files:
         leakage_current_difference_per_readout_group = {
@@ -312,14 +354,14 @@ def __plot_leakage_current_difference_vs_phi(
             "sensor_temperature_fill_{first_fill} [K]",
             "sensor_temperature_fill_{last_fill} [K]"
         )
-        file_name = "%s/leakage_current_and_temperature_per_sector_fill_difference_%s_%s.csv" \
-                    % (csv_directory, first_fill, last_fill)
+        file_name = "%s/%s_data.csv" % (csv_directory, output_name)
         __produce_csv_file(data, column_names, file_name)
 
-    figure_name = "leakage_current_difference_vs_azimuthal_angle_fills_%d_%d" % (first_fill, last_fill)
-    text = f"Fills difference {last_fill}/{first_fill}, Layer {layer}"
-    __plot_graphs(graph_minus_side, graph_plus_side, y_min, y_max, text,
-                  output_directory, figure_name, extensions)
+    text_top_left_corner = f"Fills difference {last_fill}/{first_fill}, Layer {layer}"
+    text_above_top_right_corner = "(%s) %s TeV" % ("2022", "13.6")
+    __plot_graphs(graph_minus_side, graph_plus_side, y_min, y_max,
+                  text_top_left_corner, text_above_top_right_corner,
+                  output_directory, output_name, extensions)
 
 
 def main(args):
