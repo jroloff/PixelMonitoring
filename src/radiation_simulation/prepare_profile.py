@@ -17,7 +17,7 @@ from fluence.helpers import get_fluence
 
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-PROFILE_FORMAT = "%d\t%d\t\t%4.2f\t\t%10d\t\t%6.2f"
+PROFILE_FORMAT = "%d\t%d\t%d\t\t%4.2f\t\t%10d\t\t%6.2f"
 USER_NAME, PASSWORD, DATABASE_NAME = dbUtl.get_oms_database_user_password_and_name()
 NA_VALUE = -999
 
@@ -34,13 +34,13 @@ def __get_arguments():
         "-ff", "--first_fill",
         help="First fill number to analyse",
         type=int,
-        required=True,
+        required=False,
     )
     parser.add_argument(
         "-lf", "--last_fill",
         help="Last fill number to analyse",
         type=int,
-        required=True,
+        required=False,
     )
     parser.add_argument(
         '-rog', "--readout_group",
@@ -62,6 +62,12 @@ def __get_arguments():
         help="Output profile file name",
         required=False,
         default="profile.csv",
+    )
+    parser.add_argument(
+        "-skip", "--skip_existing_output",
+        help="Skip if output profile file already exists",
+        required=False,
+        action="store_true",
     )
     parser.add_argument(
         "-di", "--interfill_delay",
@@ -232,12 +238,12 @@ def __get_interfill_data(readout_group, measurement_time, time_interval):
 
 
 def __get_and_write_interfill_measurement(
-        profile,
+        profile_text,
         readout_group,
         begin_time,
         measurement_time,
         verbose,
-        add_to_duration=0.,
+        add_to_duration=dt.timedelta(0, 0),
     ):
 
     time_interval = measurement_time - begin_time
@@ -246,15 +252,16 @@ def __get_and_write_interfill_measurement(
         measurement_time,
         time_interval,
     )
-    duration += add_to_duration
-    line = PROFILE_FORMAT % (dt.datetime.timestamp(measurement_time),
+    duration += add_to_duration.total_seconds()
+    line = PROFILE_FORMAT % (NA_VALUE,
+        dt.datetime.timestamp(measurement_time + add_to_duration),
         duration, temperature, fluence, leakage_current)
     if verbose: print(line)
-    profile.write(line + "\n")
+    profile_text.append(line)
 
 
 def __add_interfill_to_profile(
-        profile,
+        profile_text,
         readout_group,
         end_stable_beam_time_last_fill,
         begin_stable_beam_time,
@@ -267,7 +274,7 @@ def __add_interfill_to_profile(
     last_measurement_time = end_stable_beam_time_last_fill
     measurement_time = end_stable_beam_time_last_fill + interfill_time_delay
     __get_and_write_interfill_measurement(
-        profile,
+        profile_text,
         readout_group,
         last_measurement_time,
         measurement_time,
@@ -279,7 +286,7 @@ def __add_interfill_to_profile(
     measurement_time = last_measurement_time + interfill_time_interval
     while measurement_time < begin_stable_beam_time:
         __get_and_write_interfill_measurement(
-            profile,
+            profile_text,
             readout_group,
             last_measurement_time,
             measurement_time,
@@ -299,12 +306,12 @@ def __add_interfill_to_profile(
         time_delta = dt.timedelta(0, 0)
     measurement_time = begin_stable_beam_time - time_delta
     __get_and_write_interfill_measurement(
-        profile,
+        profile_text,
         readout_group,
         last_measurement_time,
         measurement_time,
         verbose,
-        add_to_duration=time_delta.total_seconds(),
+        add_to_duration=time_delta,
     )
 
 
@@ -334,14 +341,15 @@ def __get_fill_data(readout_group, pp_cross_section, fluence_field, measurement_
 
 
 def __get_and_write_fill_measurement(
-        profile,
+        profile_text,
+        fill_number,
         readout_group,
         pp_cross_section,
         fluence_field,
         begin_time,
         measurement_time,
         verbose,
-        add_to_duration=0.,
+        add_to_duration=dt.timedelta(0, 0),
     ):
 
     time_interval = measurement_time - begin_time
@@ -352,15 +360,17 @@ def __get_and_write_fill_measurement(
         measurement_time,
         time_interval,
     )
-    duration += add_to_duration
-    line = PROFILE_FORMAT % (dt.datetime.timestamp(measurement_time),
+    duration += add_to_duration.total_seconds()
+    line = PROFILE_FORMAT % (fill_number,
+        dt.datetime.timestamp(measurement_time + add_to_duration),
         duration, temperature, fluence, leakage_current)
     if verbose: print(line)
-    profile.write(line + "\n")
+    profile_text.append(line)
 
 
 def __add_fill_to_profile(
-        profile,
+        profile_text,
+        fill_number,
         readout_group,
         pp_cross_section,
         fluence_field,
@@ -375,7 +385,8 @@ def __add_fill_to_profile(
     last_measurement_time = begin_stable_beam_time
     measurement_time = begin_stable_beam_time + fill_time_delay
     __get_and_write_fill_measurement(
-        profile,
+        profile_text,
+        fill_number,
         readout_group,
         pp_cross_section,
         fluence_field,
@@ -389,7 +400,8 @@ def __add_fill_to_profile(
     measurement_time = last_measurement_time + fill_time_interval
     while measurement_time < end_stable_beam_time:
         __get_and_write_fill_measurement(
-            profile,
+            profile_text,
+            fill_number,
             readout_group,
             pp_cross_section,
             fluence_field,
@@ -409,18 +421,29 @@ def __add_fill_to_profile(
     elif (end_stable_beam_time - last_measurement_time).total_seconds() > 120:
         time_delta = dt.timedelta(0, 120)
     else:
-        time_delta = dt.timedelta(0, 0)
+        time_delta = dt.timedelta(0, 0) 
     measurement_time = end_stable_beam_time - time_delta
     __get_and_write_fill_measurement(
-        profile,
+        profile_text,
+        fill_number,
         readout_group,
         pp_cross_section,
         fluence_field,
         last_measurement_time,
         measurement_time,
         verbose,
-        add_to_duration=time_delta.total_seconds(),
+        add_to_duration=time_delta,
     )
+
+
+def write_profile(profile, profile_text):
+    for line in profile_text:
+        profile.write(line + "\n")
+
+
+def quit():
+    print("\nFINISHED")
+    exit(0)
 
 
 def main():
@@ -442,10 +465,15 @@ def main():
     fill_time_interval = dt.timedelta(0, args.fill_time_step)
 
     profile_path = args.output_directory + "/" +  args.profile
-    profile = open(profile_path, "w")
-    header_line = "Timestamp [s]\tDuration [s]\tTemperature [K]\tFluence [n_eq/cm2/s]\tLeakage_current [mA/cm2]"
+    if os.path.exists(profile_path) and args.skip_existing_output:
+        print(f"Skiping because {profile_path} already exists!")
+        quit()
+
+    profile_text = []
+
+    header_line = "Fill\tTimestamp [s]\tDuration [s]\tTemperature [K]\tFluence [n_eq/cm2/s]\tLeakage_current [mA/cm2]"
     if args.verbose: print(header_line)
-    profile.write(header_line + "\n")
+    profile_text.append(header_line)
 
     for fill in range(args.first_fill, args.last_fill+1):
         if not fill in good_fills: continue
@@ -463,11 +491,12 @@ def main():
         if end_stable_beam_datetime_last_fill is not None:
             interfill_duration = begin_stable_beam_time - end_stable_beam_datetime_last_fill
             if interfill_duration < interfill_time_delay:
-                print(f"Warning: Interill duration ({interfill_duration.total_seconds()/60} min.) "
-                      f"smaller than interfill time delay, no data collected during interfill")
+                print(f"Warning: Interfill duration ({interfill_duration.total_seconds()/60} min.) "
+                      f"smaller than interfill time delay, no data collected during interfill "
+                      f"{begin_stable_beam_time} to {end_stable_beam_datetime_last_fill}")
             else:
                 __add_interfill_to_profile(
-                    profile,
+                    profile_text,
                     readout_group,
                     end_stable_beam_datetime_last_fill,
                     begin_stable_beam_time,
@@ -479,10 +508,11 @@ def main():
         fill_duration = end_stable_beam_time - begin_stable_beam_time
         if fill_duration < fill_time_delay:
             print(f"Warning: Fill duration ({fill_duration.total_seconds()/60} min.) "
-                  f"smaller than interfill time delay, no data collected during interfill")
+                  f"smaller than fill time delay, no data collected during fill {fill}")
         else:
             __add_fill_to_profile(
-                profile,
+                profile_text,
+                fill,
                 readout_group,
                 pp_cross_section,
                 fluence_field,
@@ -494,6 +524,10 @@ def main():
             )
 
         end_stable_beam_datetime_last_fill = end_stable_beam_time
+
+    profile = open(profile_path, "w")
+    write_profile(profile, profile_text)
+    quit()
 
 
 if __name__ == "__main__":
