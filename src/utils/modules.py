@@ -1,7 +1,9 @@
+import itertools
 import collections
 from config.geometry.BPix.name_position_map import name_position_map_bpix
 from config.geometry.FPix.name_position_map import name_position_map_fpix
-from config.geometry.BPix.module_size import module_size
+from config.geometry.BPix.module_size import module_size_bpix
+from config.geometry.FPix.module_size import module_size_fpix
 
 
 PositionCoordinates = collections.namedtuple('Coordinate', ["r", "phi", "z"])
@@ -23,7 +25,7 @@ class BPixModule:
             raise ValueError("Invalid BPix module name {name}")
         position = name_position_map_bpix[self.name]
         self.position = PositionCoordinates(*position)
-        self.size = SizeCoordinates(*module_size)
+        self.size = SizeCoordinates(*module_size_bpix)
 
     def getAverageFluence(self, fluence_field, lumi, pp_cross_section, dz=0.1):
         """
@@ -40,7 +42,7 @@ class BPixModule:
         lumi *= 1e-15  # convert from /fb to /b
         pp_cross_section *= 10**27  # convert from mb to cm2
 
-        z = self.position.z - self.size.r/2. + dz/2.
+        z = self.position.z - self.size.z/2. + dz/2.
         phi_eq = 0
         while z < self.position.z + self.size.z/2.:
             phi_eq += fluence_field.GetBinContent(
@@ -67,7 +69,7 @@ class FPixModule:
             raise ValueError("Invalid FPix module name {name}")
         position = name_position_map_fpix[name]
         self.position = PositionCoordinates(*position)
-        self.size = SizeCoordinates(*module_size)
+        self.size = SizeCoordinates(*module_size_fpix)
 
     def getAverageFluence(self, fluence_field, lumi, pp_cross_section, dr=0.1):
         """
@@ -151,4 +153,48 @@ class ReadoutGroup:
         fluence = 0
         for module in self.list_of_modules:
             fluence += module.getAverageFluence(fluence_field, lumi, pp_cross_section, dx)
+        # fluence /= len(self.list_of_modules)
+        return fluence
+
+
+class BPixLayer:
+    """Class representing a BPix layer."""
+
+    def __init__(self, layer):
+        """BPixLayer constructor.
+        
+        Args:
+            layer (int): Layer number
+        """
+
+        self.layer = layer
+
+        half_cyclinders = ("BpO", "BmO", "BpI", "BmI")
+        sectors = range(1, 9)
+        self.list_of_sectors_names = [
+            "BPix_%s_SEC%s_LYR%s" % (half_cyclinder, sector, layer)
+            for half_cyclinder, sector in itertools.product(half_cyclinders, sectors)
+        ]
+
+        self.list_of_sectors = [
+            ReadoutGroup(sector_name) for sector_name in self.list_of_sectors_names
+        ]
+
+    def getAverageFluence(self, fluence_field, lumi, pp_cross_section, dx=0.1):
+        """Return average fluence over all the sectors in this readout group.
+
+        Args:
+            fluence_field (ROOT.TH2F): Fluence field, in n_eq.cm-2
+            lumi (float): Integrated luminosity in fb-1 (resp. fb-1.s-1)
+            pp_cross_section (float): proton-proton total cross-section in mb
+            dx (float): infinitesimal integration element in cm
+    
+        Returns:
+            float: Fluence for the module, in n_eq.cm-2 (resp. n_eq.cm-2.s-1)
+        """
+
+        fluence = 0
+        for module in self.list_of_sectors:
+            fluence += module.getAverageFluence(fluence_field, lumi, pp_cross_section, dx)
+        # fluence /= len(self.list_of_sectors)
         return fluence
