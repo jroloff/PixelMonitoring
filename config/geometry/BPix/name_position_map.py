@@ -1,4 +1,4 @@
-# Mapping between module name and position in (r, phi, z) system in cm
+# Mapping between module name and position in (r, phi, z) system in cm x rad x cm
 
 name_position_map_bpix = {
     "BPix_BmI_SEC3_LYR1_LDR3F_MOD4": [3.05606, 0.277804, -23.45],

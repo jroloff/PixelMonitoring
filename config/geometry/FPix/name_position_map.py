@@ -1,4 +1,4 @@
-# Mapping between module name and position in (r, l, z) system in cm
+# Mapping between module name and position in (r, l, z) system in cm x rad x cm
 
 name_position_map_fpix = {
     "FPix_BpI_D1_BLD6_PNL2_RNG1": [7.81674, 0.0646533, 31.8759],
