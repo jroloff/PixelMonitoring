@@ -81,8 +81,15 @@ def omds_to_dcs_alias(omds_alias):
         "2I_L3D2PN": "2I_L3D2PN",
     }
 
+    broken_cooling_loops = ["6I_L4D3MF", "6I_L4D3PN"]
+
+    if omds_alias in broken_cooling_loops:
+        print(f"Warning: {omds_alias} is in the list of broken cooling loops!")
+        return None
+
     if omds_alias not in omds_to_dcs_alias_map.keys():
         print(f"Error: {omds_alias} not not OMDS to DCS alias map!")
         return None
 
     return omds_to_dcs_alias_map[omds_alias]
+
