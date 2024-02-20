@@ -62,7 +62,7 @@ def get_fills_for_era(era):
     fills_2016 = list(range(4851, 5457))
     fills_2017 = list(range(5698, 6468))
     fills_2018 = list(range(6468, 7495))
-    fills_2022 = list(range(7917, 8474))
+    fills_2022 = list(range(7920, 8497))
     fills_run1 = fills_2012
     fills_run2 = fills_2015 + fills_2016 + fills_2017 + fills_2018
     fills_run3 = fills_2022
@@ -100,5 +100,9 @@ def get_pp_cross_section(fill):
     run_number = get_run_number_from_fill(fill)
     if run_number == 2:
         return 79.1
+    elif run_number == 3:
+        print("Warning: Run3 pp cross-section should be updated!")
+        return 80  # No idea how much it is, but it is not much more
     else:
         raise NotImplementedError
+
