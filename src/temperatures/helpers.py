@@ -163,6 +163,10 @@ def get_module_cooling_loop_temperature(readout_group, begin_time, end_time):
         temperature = item[1]
         date_changed = item[2]
 
+        if temperature is None:
+            print("Warning: Cooling loop sensor %s temperature is None" % cooling_loop_sensor_name)
+            continue
+
         if float(temperature) > 40:
             print("Warning: Faulty sensor for cooling loop sensor %s" % cooling_loop_sensor_name)
             continue # ignore the broken temperature sensors giving crazy values
@@ -170,6 +174,9 @@ def get_module_cooling_loop_temperature(readout_group, begin_time, end_time):
         # Correct the cooling loop alias mismapping from OMDS to DCS
         omds_alias = pyUtl.list_to_str(cooling_loop_sensor_name.split("_")[-2:], "_")
         dcs_alias = omds_to_dcs_alias(omds_alias)
+        if dcs_alias is None:
+            continue # Error message must have been sent by the omds_to_dcs_alias function
+        
         cooling_loop_sensor_name = cooling_loop_sensor_name.replace(omds_alias, dcs_alias) 
 
         sectors_regex = get_sectors_regex_from_cooling_loop_sensor_name(cooling_loop_sensor_name)
@@ -254,7 +261,7 @@ def get_sensor_temperature(
     """
 
     hv_on = is_hv_on(begin_time, end_time, readout_group)
-    assert correct_for_fluence and fluence is not None
+    assert (correct_for_fluence and fluence is not None) or not correct_for_fluence
 
     temperature =  get_module_cooling_loop_temperature(
         readout_group,
