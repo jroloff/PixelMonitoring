@@ -4,7 +4,9 @@
 To simplify the environment setting, we advise to install the code on `lxplus` or anywhere else where you have access to `cvmfs` (see Section `Setup environment`)
 ```bash
 git clone git@github.com:fleble/PixelMonitoring.git
+cd PixelMonitoring
 source setup.sh
+pip install --user tsgauth
 ```
 
 
