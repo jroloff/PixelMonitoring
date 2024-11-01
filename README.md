@@ -30,7 +30,7 @@ source unset_brilwsenv.sh
 
 ## Overview and decription of all scripts
 
-This repo has three objectives:
+This repo has three objectives:     
 1- The monitoring of the Pixel Tracker detector (temperatures, currents etc...): "monitoring tools"    
 2- The analysis of the leakage current: "leakage current analysis"    
 3- The preparation of the radiation profile for the radiation damage simulation: "radiation profile"    
