@@ -1,7 +1,7 @@
 # Run 3 monitoring commands
 
-first_fill=8474
-last_fill=9319
+first_fill=7920
+last_fill=9300  # to be changed the actual end of Run3
 
 suffix=run3
 sub_system=Barrel
