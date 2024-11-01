@@ -76,10 +76,10 @@ For all scripts, learn about its usage with `python script.py -h`.
 
 | Script      | Description |
 | :---------- | :---------- |
-| `src/fills_info/getFills.py`                  | Reads stable beam start and stop timestamps using CMS OMS API for requested fills, listing only good fills, and writes to an output file (default in `data/fills_info/fills.csv`). |
-| `src/luminosity/getIntegratedLuminosity.py`   | Reads instantaneous and integrated lumi from either `brilcalc` or OMS and writes it to an output file (default `data/luminosity/integrated_luminosity_per_fill.csv`). |
-| `src/currents/getCurrentsFromDB.py`           | Reads the currents from the `cms_omds_adg` Oracle database and write one file per fill in `data/currents/from_database/`. |
-| `src/currents/getCurrents.py`                 | Reads currents from database and writes digital, analog, analog per ROC and HV per ROC currents (default in `data/currents/processed/`). |
+| `src/fills_info/get_fills.py`                 | Reads stable beam start and stop timestamps using CMS OMS API for requested fills, listing only good fills, and writes to an output file (default in `data/fills_info/fills.csv`). |
+| `src/luminosity/get_integrated_luminosity.py` | Reads instantaneous and integrated lumi from either `brilcalc` or OMS and writes it to an output file (default `data/luminosity/integrated_luminosity_per_fill.csv`). |
+| `src/currents/get_currents_from_database.py`  | Reads the currents from the `cms_omds_adg` Oracle database and write one file per fill in `data/currents/from_database/`. |
+| `src/currents/get_currents.py`                | Reads currents from database and writes digital, analog, analog per ROC and HV per ROC currents (default in `data/currents/processed/`). |
 | `src/temperatures/get_readout_group_temperatures.py`| Reads temperatures per readout group from the `cms_omds_adg` Oracle database, correcting for self-heating and fluence, and writes one file per fill (default in `data/temperatures/readout_group/`). |
 | `src/temperatures/getPLCAirTemperatures.py`   | Reads temperatures from the `cms_omds_adg` Oracle database and writes one file per fill (default in `data/temperatures/air/`). |
 | `src/annealing_temperatures/getAnnealingTemperatures.py`| Reads temperatures from the `cms_omds_adg` Oracle database and writes one file per temperature sensor, each row with the average temperature of one day (default in `data/temperatures/annealing/`). |
