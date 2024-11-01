@@ -21,7 +21,7 @@ For using `brilcalc`, do:
 ```bash
 source brilwsenv.sh
 ```
-This is automcatically done in `setenv.sh`.
+This is automatically done in `setenv.sh`.
 You can unset this setup by doing:
 ```bash
 source unset_brilwsenv.sh
@@ -31,9 +31,9 @@ source unset_brilwsenv.sh
 ## Overview and decription of all scripts
 
 This repo has three objectives:
-1- The monitoring of the Pixel Tracker detector (temperatures, currents etc...): "monitoring tools"
-2- The analysis of the leakage current: "leakage current analysis"
-3- The preparation of the radiation profile for the radiation damage simulation: "radiation profile"
+1- The monitoring of the Pixel Tracker detector (temperatures, currents etc...): "monitoring tools"    
+2- The analysis of the leakage current: "leakage current analysis"    
+3- The preparation of the radiation profile for the radiation damage simulation: "radiation profile"    
 
 Here is a description of the different directories in this repo (some are created after running `source setup.sh` or running the code):
 * `src/` contains all the source code
@@ -47,10 +47,10 @@ Here is a description of the different directories in this repo (some are create
 ## Running the monitoring tools and leakage current analysis
 
 Commands for Run 3 are available in `run3.sh`. The following scripts must be run:
-* `src/fills_info/getFills.py`
-* `src/luminosity/getIntegratedLuminosity.py`
-* `src/currents/getCurrentsFromDB.py`
-* `src/currents/getCurrents.py`
+* `src/fills_info/get_fills.py`
+* `src/luminosity/get_integrated_luminosity.py`
+* `src/currents/get_currents_from_database.py`
+* `src/currents/get_currents.py`
 * `src/temperatures/get_readout_group_temperatures.py`
 * `src/currents/plot_currents.py`
 * `src/currents/plot_currents_vs_azimuth.py`
