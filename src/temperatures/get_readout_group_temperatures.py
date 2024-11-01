@@ -61,7 +61,12 @@ def main(args):
         temperatures = {}
         for readout_group_name in readout_group_names:
             readout_group = ReadoutGroup(readout_group_name)
-            sensor_temperature = get_sensor_temperature(readout_group, begin_time, measurement_time)
+            sensor_temperature = get_sensor_temperature(
+                readout_group,
+                begin_time,
+                measurement_time,
+                correct_for_fluence=False,
+            )
             temperatures[readout_group_name] = sensor_temperature
 
         temperature_file_name = "%s/%s.txt" % (output_directory, fill)
