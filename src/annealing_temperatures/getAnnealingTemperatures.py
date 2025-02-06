@@ -45,7 +45,7 @@ def __get_arguments():
 
 
 def __sanity_checks(args):
-    assert (args.start_date and args.end_date) or (args.first_fill and args.end_fill)
+    assert (args.start_date and args.end_date) or (args.first_fill and args.last_fill)
 
 
 def __get_dates_in_file(file_name):

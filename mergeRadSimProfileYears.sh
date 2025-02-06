@@ -1,6 +1,6 @@
 #!/bin/bash
 
-phase=1
+phase=1_newL1
 rog=BPix_BmI_SEC1_LYR1
 
 if [ "$phase" == "0" ]; then
@@ -10,6 +10,7 @@ elif [ "$phase" == "1" ]; then
     yets=(20172018)
 elif [ "$phase" == "1_newL1" ]; then
     years=(2022)
+    yets=(2022)
 fi
 
 # Define input and output
@@ -32,12 +33,12 @@ fi
 cp ${input_directory}/* ${input_directory_tmp}
 
 for yets_period in ${yets[@]}; do
-  input_yets_directory=data/radiation_simulation/profiles/fragments/YETS${yets_period}/${rog}
+  input_yets_directory=data/radiation_simulation/profiles/fragments/${yets_period}/${rog}
   n_files=$(ls ${input_yets_directory} | grep -E "\.txt$" | wc -l)
   if [ "${n_files}" != "1" ]; then
     echo "ERROR! More than 1 file in YETS ${yets_period}"
     echo $(ls ${input_yets_directory} | grep -E "\.txt$")
-    exit 1
+    #exit 1
   fi
   file=$(ls ${input_yets_directory} | grep -E "\.txt$")
   cp ${input_yets_directory}/${file} ${input_directory_tmp}
