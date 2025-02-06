@@ -29,6 +29,12 @@ You can unset this setup by doing:
 source unset_brilwsenv.sh
 ```
 
+Create the `data/fluence` directory:
+```bash
+mkdir data/fluence
+```
+Download the FLUKA file at: https://cernbox.cern.ch/s/GOodjidr8cNKREj and copy it under `data/fluence`.
+
 
 ## Overview and decription of all scripts
 
