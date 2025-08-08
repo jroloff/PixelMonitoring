@@ -9,6 +9,7 @@ from utils import generalUtils as gUtl
 from utils import databaseUtils as dbUtl
 from utils import eraUtils as eraUtl
 from utils import pixelDesignUtils as designUtl
+import currents.helpers as helpers
 
 
 user_name, password, database_name = dbUtl.get_oms_database_user_password_and_name()
@@ -91,59 +92,13 @@ def main(args):
             measurement_time = end_time
         else:
             measurement_time = begin_time + delay
+
+        output = helpers.read_currents_from_db(connection, cursor, begin_time, measurement_time, "(lal.alias LIKE 'CMS_TRACKER/%Pixel%/channel00%')")
         
-        # The end_time has to be begin_time + 10 minutes (or 20?) because the 
-        # currents that will be read are the last within the begin_time to
-        # end_time time window, such that it is after thermal equilibrium.
-        # The time window has to be large enough to get data
-        begin_time = begin_time.strftime(python_time_mask)
-        measurement_time = measurement_time.strftime(python_time_mask)
-
-        query = multi_line_str("""
-            WITH cables AS (
-                SELECT DISTINCT SUBSTR(lal.alias,INSTR(lal.alias,  '/', -1, 2)+1) cable, id dpid, cd
-                    FROM (
-                        SELECT max(since) AS cd, alias
-                        FROM cms_trk_dcs_pvss_cond.aliases
-                        GROUP BY alias
-                    ) md, cms_trk_dcs_pvss_cond.aliases lal
-                    JOIN cms_trk_dcs_pvss_cond.dp_name2id ON dpe_name=concat(dpname,'.')
-                    WHERE md.alias=lal.alias
-                          AND lal.since=cd
-                          AND (lal.alias LIKE 'CMS_TRACKER/%Pixel%/channel00%')
-            ),
-            it AS (
-                SELECT dpid, max(change_date) itime
-                FROM cms_trk_dcs_pvss_cond.fwcaenchannel caen
-                WHERE change_date
-                          BETWEEN TO_TIMESTAMP('{start_time}', '{oracle_time_mask}')
-                          AND TO_TIMESTAMP('{end_time}', '{oracle_time_mask}')
-                      AND actual_Imon is not NULL
-                GROUP BY dpid
-            ),
-            i_mon AS (
-                SELECT it.dpid, itime, actual_Imon, actual_Vmon
-                FROM cms_trk_dcs_pvss_cond.fwcaenchannel caen
-                JOIN it ON (it.dpid = caen.dpid AND change_date = itime)
-                AND actual_Imon is not NULL
-            )
-            SELECT cable, actual_Imon, actual_Vmon, itime
-            FROM i_mon
-            JOIN cables ON (i_mon.dpid=cables.dpid)
-            ORDER BY itime
-            """.format(
-                start_time=begin_time,
-                end_time=measurement_time,
-                oracle_time_mask=oracle_time_mask,
-            )
-        )
-
-        cursor.execute(query)
-        output = cursor.fetchall()
-    
         currents_file_name = args.output_directory + "/" + str(fill) + "_" + args.sub_system + ".txt"
         output_file = open(currents_file_name, "w+")
         for row in output:
+            print (row)
             cable, i_mon, v_mon, time  = row
             layer = designUtl.get_layer_name_from_cable_name(cable)
             if layer not in allowed_layers:

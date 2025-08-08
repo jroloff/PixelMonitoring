@@ -24,7 +24,8 @@ def get_phase_from_fill(fill):
 
     if fill >= 1005 and fill <= 5575:
         return 0
-    elif fill >= 5698:
+    #elif fill >= 5698:
+    elif fill >= 5658:
         return 1
     else:
         raise ValueError(f"Invalid fill number {fill}")
@@ -61,7 +62,8 @@ def get_fills_for_era(era):
     fills_2015 = list(range(3819, 4851))
     fills_2016 = list(range(4851, 5457))
     fills_2017 = list(range(5698, 6468))
-    fills_2018 = list(range(6468, 7495))
+    #fills_2018 = list(range(6468, 7495))
+    fills_2018 = list(range(6468, 7920))
     fills_2022 = list(range(7920, 9319))
     fills_2023 = list(range(9320, 9500))
     fills_run1 = fills_2012

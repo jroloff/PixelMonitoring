@@ -1,5 +1,10 @@
 import math
 
+import cx_Oracle
+import datetime as dt
+from inspect import cleandoc as multi_line_str
+from utils import databaseUtils as dbUtl
+
 from utils import pixelDesignUtils as designUtl
 from utils import eraUtils as eraUtl
 from utils.constants import K_B, E_G_EFF
@@ -32,7 +37,7 @@ def get_average_leakage_current_per_layer(
         )
 
     values = leakage_current_per_readout_group.values()
-    average_leakage_current = sum(values) / len(values)
+    average_leakage_current = sum(values) / (max(len(values),1))
 
     return average_leakage_current
 
@@ -175,4 +180,64 @@ def normalize_leakage_current_to_unit_volume(
     """
 
     return leakage_current / (n_rocs * roc_volume)
+
+def read_currents_from_db(connection, cursor, begin_time, measurement_time, cable_condition):
+        python_time_mask = "%d-%b-%Y %H.%M.%S.%f"
+        oracle_time_mask = "DD-Mon-YYYY HH24.MI.SS.FF"
+
+        # The end_time has to be begin_time + 10 minutes (or 20?) because the 
+        # currents that will be read are the last within the begin_time to
+        # end_time time window, such that it is after thermal equilibrium.
+        # The time window has to be large enough to get data
+        begin_time = begin_time.strftime(python_time_mask)
+        measurement_time = measurement_time.strftime(python_time_mask)
+        # More things are selected in this code
+        # than in https://github.com/fleble/PixelMonitoring/blob/main/src/radiation_simulation/prepare_profile.py,
+        # but the query structure is identical
+
+        query = multi_line_str("""
+            WITH cables AS (
+                SELECT DISTINCT SUBSTR(lal.alias,INSTR(lal.alias,  '/', -1, 2)+1) cable, id dpid, cd
+                    FROM (
+                        SELECT max(since) AS cd, alias
+                        FROM cms_trk_dcs_pvss_cond.aliases
+                        GROUP BY alias
+                    ) md, cms_trk_dcs_pvss_cond.aliases lal
+                    JOIN cms_trk_dcs_pvss_cond.dp_name2id ON dpe_name=concat(dpname,'.')
+                    WHERE md.alias=lal.alias
+                          AND lal.since=cd
+                          AND {cable_condition}
+            ),
+            it AS (
+                SELECT dpid, max(change_date) itime
+                FROM cms_trk_dcs_pvss_cond.fwcaenchannel caen
+                WHERE change_date
+                          BETWEEN TO_TIMESTAMP('{start_time}', '{oracle_time_mask}')
+                          AND TO_TIMESTAMP('{end_time}', '{oracle_time_mask}')
+                      AND actual_Imon is not NULL
+                GROUP BY dpid
+            ),
+            i_mon AS (
+                SELECT it.dpid, itime, actual_Imon, actual_Vmon
+                FROM cms_trk_dcs_pvss_cond.fwcaenchannel caen
+                JOIN it ON (it.dpid = caen.dpid AND change_date = itime)
+                AND actual_Imon is not NULL
+            )
+            SELECT cable, actual_Imon, actual_Vmon, itime
+            FROM i_mon
+            JOIN cables ON (i_mon.dpid=cables.dpid)
+            ORDER BY itime
+            """.format(
+                cable_condition=cable_condition,
+                start_time=begin_time,
+                end_time=measurement_time,
+                oracle_time_mask=oracle_time_mask,
+            )
+        )
+
+        cursor.execute(query)
+        output = cursor.fetchall()
+        return output
+
+
 
