@@ -134,6 +134,7 @@ def __get_leakage_current(readout_group, begin_time, end_time):
         raise NotImplementedError
 
 
+    print("testing: ", begin_time,  end_time, cable_condition)
     output = helpers.read_currents_from_db(connection, cursor, begin_time, end_time, cable_condition)
     
     # TODO: This is very slow, since it will keep going backwards in time until it finds something. Maybe there should be some sort of cap?
@@ -141,8 +142,8 @@ def __get_leakage_current(readout_group, begin_time, end_time):
     if len(output) == 1:
         leakage_current = output[0][1]
     elif len(output) == 0:
-        # leakage_current = NA_VALUE
-        leakage_current = __get_leakage_current(readout_group, begin_time - dt.timedelta(0, 3600), begin_time)
+        leakage_current = NA_VALUE
+        #leakage_current = __get_leakage_current(readout_group, begin_time - dt.timedelta(0, 3600), begin_time)
     else:
         print("Error: Leakage current query returned %d rows, but should return at most 1 only!" % (len(output)))
 
@@ -196,6 +197,7 @@ def __get_fill_data(readout_group, pp_cross_section, fluence_field, measurement_
       leakage_current = NA_VALUE
       fluence = 0
     else:
+      print("getting leakage current")
       leakage_current = __get_leakage_current(readout_group, begin_time, end_time)
       lumi = __get_lumi(begin_time, end_time) / duration
       fluence = get_fluence(readout_group, pp_cross_section, fluence_field, lumi)
@@ -226,6 +228,7 @@ def __get_and_write_fill_measurement(
     ):
 
     time_interval = measurement_time - begin_time
+    print("fill: " , fill_number, is_interfill)
     duration, temperature, leakage_current, fluence = __get_fill_data(
         readout_group,
         pp_cross_section,
@@ -375,7 +378,9 @@ def main():
 
     for fill in range(args.first_fill, args.last_fill+1):
         print(fill)
-        if not fill in good_fills: continue
+        if not fill in good_fills: 
+          print("not in good fills")
+          continue
 
         fill_info = fills_info[fills_info.fill_number == fill]
         if len(fill_info) != 1:
