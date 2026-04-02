@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 from inspect import cleandoc as multi_line_str
 
+import numpy
 import cx_Oracle
 import datetime as dt
 import ROOT
@@ -19,7 +20,7 @@ import currents.helpers as helpers
 
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-PROFILE_FORMAT = "%d\t%d\t%d\t\t%4.2f\t\t%10d\t\t%6.2f"
+PROFILE_FORMAT = "%d\t%d\t%d\t\t%4.2f\t\t%10d\t\t%6.2f\t\t%d"
 USER_NAME, PASSWORD, DATABASE_NAME = dbUtl.get_oms_database_user_password_and_name()
 NA_VALUE = -999
 
@@ -177,6 +178,7 @@ def __get_lumi(begin_datetime, end_datetime):
     )
     command_line = f'brilcalc lumi --begin "{begin_time}" --end "{end_time}" -u /fb --output-style csv'
     out = os.popen(command_line).read()
+    print(out)
     lumi = float(out.split("\n")[-2].split(",")[-2])
 
     return lumi
@@ -225,10 +227,10 @@ def __get_and_write_fill_measurement(
         verbose,
         add_to_duration=dt.timedelta(0, 0),
         is_interfill = False,
+        bunches = 0,
     ):
 
     time_interval = measurement_time - begin_time
-    print("fill: " , fill_number, is_interfill)
     duration, temperature, leakage_current, fluence = __get_fill_data(
         readout_group,
         pp_cross_section,
@@ -242,10 +244,9 @@ def __get_and_write_fill_measurement(
       fill_number = NA_VALUE
     line = PROFILE_FORMAT % (fill_number,
         dt.datetime.timestamp(measurement_time + add_to_duration),
-        duration, temperature, fluence, leakage_current)
+        duration, temperature, fluence, leakage_current, bunches)
     if verbose: print(line)
     profile_text.append(line)
-    print(line)
 
 
 def __add_fill_to_profile(
@@ -260,6 +261,7 @@ def __add_fill_to_profile(
         fill_time_interval,
         verbose,
         is_interfill = False,
+        bunches=0,
     ):
 
     # First measurement after time delay
@@ -277,6 +279,7 @@ def __add_fill_to_profile(
         measurement_time,
         verbose,
         is_interfill = is_interfill,
+        bunches = bunches,
     )
     last_measurement_time = measurement_time
 
@@ -293,6 +296,7 @@ def __add_fill_to_profile(
             measurement_time,
             verbose,
             is_interfill = is_interfill,
+            bunches = bunches,
         )
         last_measurement_time = measurement_time
         measurement_time += fill_time_interval
@@ -321,7 +325,6 @@ def __add_fill_to_profile(
           time_delta = dt.timedelta(0, 0) 
 
       measurement_time = end_stable_beam_time - time_delta
-    print(measurement_time, last_measurement_time, time_delta, end_stable_beam_time)
 
     __get_and_write_fill_measurement(
         profile_text,
@@ -334,6 +337,7 @@ def __add_fill_to_profile(
         verbose,
         add_to_duration=time_delta,
         is_interfill = is_interfill,
+        bunches = bunches,
     )
 
 
@@ -372,7 +376,7 @@ def main():
 
     profile_text = []
 
-    header_line = "Fill\tTimestamp [s]\tDuration [s]\tTemperature [K]\tFluence [n_eq/cm2/s]\tLeakage_current [mA/cm2]"
+    header_line = "Fill\tTimestamp [s]\tDuration [s]\tTemperature [K]\tFluence [n_eq/cm2/s]\tLeakage_current [mA/cm2]\tNumber of bunches"
     if args.verbose: print(header_line)
     profile_text.append(header_line)
 
@@ -383,10 +387,14 @@ def main():
           continue
 
         fill_info = fills_info[fills_info.fill_number == fill]
+        print (fill_info,  fill_info.bunches_colliding)
         if len(fill_info) != 1:
             print("Error!")
             exit(0)
 
+        bunches = fill_info.bunches_colliding.iloc[0]
+        if numpy.isnan(fill_info.bunches_colliding.iloc[0]):
+          bunches = 0
         pp_cross_section = eraUtl.get_pp_cross_section(fill)
 
         begin_stable_beam_time = dt.datetime.fromisoformat(fill_info.start_stable_beam.to_list()[0])
@@ -410,7 +418,8 @@ def main():
                     interfill_time_delay,
                     interfill_time_interval,
                     verbose=args.verbose,
-                    is_interfill = True
+                    is_interfill = True,
+                    bunches = bunches
                 )
 
         fill_duration = end_stable_beam_time - begin_stable_beam_time
@@ -429,6 +438,7 @@ def main():
                 fill_time_delay,
                 fill_time_interval,
                 verbose=args.verbose,
+                bunches = bunches
             )
 
         end_stable_beam_datetime_last_fill = end_stable_beam_time

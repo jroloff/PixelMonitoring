@@ -63,12 +63,16 @@ def get_fills_for_era(era):
     fills_2016 = list(range(4851, 5457))
     fills_2017 = list(range(5698, 6468))
     #fills_2018 = list(range(6468, 7495))
-    fills_2018 = list(range(6468, 7920))
-    fills_2022 = list(range(7920, 9319))
-    fills_2023 = list(range(9320, 9500))
+    fills_2018 = list(range(6468, 7491))
+    fills_2021 = list(range(7492, 7531))
+    fills_2022 = list(range(7531, 8496))
+    fills_2023 = list(range(8497, 9319))
+    fills_2024 = list(range(9320, 10404))
+    fills_2025 = list(range(10405, 11391))
+    fills_2026 = list(range(11391, 11600))
     fills_run1 = fills_2012
     fills_run2 = fills_2015 + fills_2016 + fills_2017 + fills_2018
-    fills_run3 = fills_2022
+    fills_run3 = fills_2022 + fills_2023 + fills_2024 + fills_2025 + fills_2026
     fills_run1_and_run2 = fills_2015 + fills_2016 + fills_2017 + fills_2018
 
     return eval("fills_" + era)

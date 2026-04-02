@@ -4,6 +4,7 @@ import argparse
 
 import cx_Oracle
 import datetime as dt
+import numpy
 
 from utils import generalUtils as gUtl
 from utils import databaseUtils as dbUtl
@@ -93,20 +94,27 @@ def main(args):
         else:
             measurement_time = begin_time + delay
 
+        #print(begin_time, measurement_time, "(lal.alias LIKE 'CMS_TRACKER/%Pixel%/channel00%')")
         output = helpers.read_currents_from_db(connection, cursor, begin_time, measurement_time, "(lal.alias LIKE 'CMS_TRACKER/%Pixel%/channel00%')")
         
         currents_file_name = args.output_directory + "/" + str(fill) + "_" + args.sub_system + ".txt"
         output_file = open(currents_file_name, "w+")
+        #print(fill_info, fill_info.bunches_colliding)
         for row in output:
-            print (row)
+            #print (row)
             cable, i_mon, v_mon, time  = row
             layer = designUtl.get_layer_name_from_cable_name(cable)
+            bunches = fill_info.bunches_colliding.iloc[0]
+            if numpy.isnan(fill_info.bunches_colliding.iloc[0]):
+              bunches = 0
             if layer not in allowed_layers:
+                #print( "layer ", layer, cable," not in allowed layers")
                 continue
             if not args.sub_system in cable:
                 continue
             else:
-                line = "%s   %s   %s   %s\n" % (cable, i_mon, v_mon, time)
+                line = "%s   %s   %s   %s   %d\n" % (cable, i_mon, v_mon, time, bunches)
+         
                 output_file.write(line)
     
         output_file.close()

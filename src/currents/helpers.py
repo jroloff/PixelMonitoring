@@ -94,6 +94,8 @@ def get_leakage_currents_and_temperatures_per_readout_group(
     temperature_per_readout_group = {}
 
     for readout_group_name, leakage_current in leakage_currents.items():
+        #if(readout_group_name!="BPix_BmI_SEC1_LYR2"):
+        #  continue
         sensor_temperature = sensor_temperatures[readout_group_name]
 
         if readout_group_name in leakage_current_per_readout_group.keys():

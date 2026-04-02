@@ -148,6 +148,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument(
             "-tref", "--target_temperature",
             help="Temperature target for leakage current rescaling, in Celsius, default=%(default)s",
+            type = float,
             default=None,
         )
         self.add_argument(
@@ -167,3 +168,4 @@ def sanity_checks_leakage_current_flags(args):
          and (args.normalize_to_volume and args.normalize_to_number_of_rocs)):
          print("Error: normalize_to_volume and normalize_to_number_of_rocs cannot be used at the same time!")
          exit(1)
+

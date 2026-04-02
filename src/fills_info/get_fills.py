@@ -86,14 +86,14 @@ def main():
     args = __get_arguments()
     Path(args.output_directory).mkdir(parents=True, exist_ok=True)
 
-    attributes = ["delivered_lumi", "fill_number", "start_stable_beam", "end_stable_beam"]
+    attributes = ["delivered_lumi", "fill_number", "start_stable_beam", "end_stable_beam", "injection_scheme", "bunches_colliding"]
     data = __get_data(args.first_fill, args.last_fill, attributes)
     data = __format_time(data, ("start_stable_beam", "end_stable_beam"))
     data.drop(columns="delivered_lumi", inplace=True)
     
     suffix = (len(args.output_file_name_suffix) > 0) * "_" + args.output_file_name_suffix
     output_file_name = args.output_directory + "/" + "fills" + suffix  + ".csv"
-    data.to_csv(output_file_name, index=False, columns=["fill_number", "start_stable_beam", "end_stable_beam"])
+    data.to_csv(output_file_name, index=False, columns=["fill_number", "start_stable_beam", "end_stable_beam", "bunches_colliding"])
     print(f"{output_file_name} was written.")
 
 
